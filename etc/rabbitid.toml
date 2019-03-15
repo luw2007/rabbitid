@@ -1,0 +1,12 @@
+[server]
+addr = ":7000"
+
+[store]
+type = "redis"
+uri = "127.0.0.1:6379"
+min_second = 60
+max_second = 600
+
+[generate]
+dataCenter = 0
+step = 1000
