@@ -12,6 +12,18 @@ cd rabbitid
 go run cmd/idRedis/main.go
 ```
 
+quick start
+---
+```
+# 启动依赖存储
+docker-compose up -d
+# 运行http协议客户端
+go run cmd/idHttp/main.go
+# 查询id
+curl 'http://127.0.0.1:7000/next' -d '{"app":"ugc","db":"topic"}'
+# 得到 {"id":1}
+```
+
 redis store
 ---
 ```shell

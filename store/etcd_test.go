@@ -16,7 +16,7 @@ const (
 	testTable          = "test_1"
 	testKey            = "test|test_1"
 	testBenchKey       = "bench_1"
-	testURI            = "localhost:2379"
+	testURI            = "127.0.0.1:2379"
 	timeout            = time.Second * 50
 	testSize     int64 = 100
 	testDC       uint8 = 0
