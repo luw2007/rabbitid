@@ -3,10 +3,9 @@ package store
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
-	kitlog "github.com/go-kit/kit/log"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,8 +14,8 @@ const (
 )
 
 func TestRedis_Range(t *testing.T) {
-	logger := kitlog.NewJSONLogger(kitlog.NewSyncWriter(os.Stderr))
-	client := NewRedis(testRedis, logger)
+	log := logrus.NewEntry(logrus.New())
+	client := NewRedis(testRedis, log)
 
 	// 清理旧数据
 	biz := fmt.Sprintf(redisPrefix, testDC, testDB, testTable)
@@ -37,8 +36,8 @@ func TestRedis_Range(t *testing.T) {
 }
 
 func TestRedis_Ping(t *testing.T) {
-	logger := kitlog.NewJSONLogger(kitlog.NewSyncWriter(os.Stderr))
-	client := NewRedis(testRedis, logger)
+	log := logrus.NewEntry(logrus.New())
+	client := NewRedis(testRedis, log)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	err := client.Ping(ctx)
 	cancel()

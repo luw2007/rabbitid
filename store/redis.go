@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	kitlog "github.com/go-kit/kit/log"
 	"github.com/go-redis/redis"
+	"github.com/sirupsen/logrus"
 )
 
 const redisPrefix = "rabbitid_%d_%s_%s"
@@ -14,11 +14,11 @@ const redisPrefix = "rabbitid_%d_%s_%s"
 // A Redis 使用redis作存储
 type Redis struct {
 	conn *redis.Client
-	log  kitlog.Logger
+	log  *logrus.Entry
 }
 
 // NewRedis 获取redis实例
-func NewRedis(redisAddr string, logger kitlog.Logger) Redis {
+func NewRedis(redisAddr string, logger *logrus.Entry) Redis {
 	cli := redis.NewClient(&redis.Options{
 		Addr: redisAddr,
 	})
@@ -26,7 +26,7 @@ func NewRedis(redisAddr string, logger kitlog.Logger) Redis {
 	if err != nil {
 		log.Fatal("redis connect error", redisAddr)
 	}
-	return Redis{conn: cli, log: kitlog.With(logger, "store", "redis")}
+	return Redis{conn: cli, log: logger.WithField("store", "redis")}
 }
 
 // Range 分片分配进度, 返回v 表示可用范围[v, v+size)
@@ -34,7 +34,7 @@ func (p Redis) Range(_ context.Context, dataCenter uint8, db, table string, size
 	biz := fmt.Sprintf(redisPrefix, dataCenter, db, table)
 	value := p.conn.HIncrBy(biz, table, size)
 	max := value.Val()
-	p.log.Log("action", "range", "biz", biz, "size", size, "last", max-size)
+	p.log.WithFields(logrus.Fields{"action": "range", "biz": biz, "size": size, "last": max - size})
 	return max - size, value.Err()
 }
 

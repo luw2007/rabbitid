@@ -3,11 +3,10 @@ package store
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/go-kit/kit/log"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,8 +22,8 @@ const (
 )
 
 func TestEtcd_Range(t *testing.T) {
-	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
-	client := NewEtcd(testURI, logger)
+	log := logrus.NewEntry(logrus.New())
+	client := NewEtcd(testURI, log)
 
 	// 清理旧数据
 	biz := fmt.Sprintf(etcdTPL, etcdRoot, testDC, testDB, testBenchKey)
@@ -45,14 +44,14 @@ func TestEtcd_Range(t *testing.T) {
 }
 
 func TestEtcd_Ping(t *testing.T) {
-	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
+	logger := logrus.NewEntry(logrus.New())
 	client := NewEtcd(testURI, logger)
 	err := client.Ping(context.TODO())
 	assert.NoError(t, err)
 }
 
 func BenchmarkEtcd_Range(b *testing.B) {
-	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
+	logger := logrus.NewEntry(logrus.New())
 	client := NewEtcd(testURI, logger)
 
 	// 清理旧数据

@@ -9,8 +9,7 @@ import (
 	"sync"
 	"time"
 
-	klog "github.com/go-kit/kit/log"
-	"github.com/petermattis/goid"
+	"github.com/sirupsen/logrus"
 
 	"github.com/luw2007/rabbitid/generator"
 	"github.com/luw2007/rabbitid/store"
@@ -37,7 +36,7 @@ type service struct {
 	// minBufferTime, maxBufferTime 表示缓存最长和最短支持时间，用来调整每次缓存数量
 	minBufferTime time.Duration
 	maxBufferTime time.Duration
-	log           klog.Logger
+	log           *logrus.Entry
 }
 
 const (
@@ -53,11 +52,11 @@ const (
 var ErrEmpty = errors.New("类型不存在")
 
 // New 生成新的ID服务
-func New(logger klog.Logger, store store.Store, size int64, dc uint8, min, max time.Duration) Service {
+func New(logger *logrus.Entry, store store.Store, size int64, dc uint8, min, max time.Duration) Service {
 	if int64(dc) > generator.DataCenterMask {
 		log.Fatalln("dateCenter critical:", dc)
 	}
-	logger = klog.With(logger, "svc", "id", "gid", goid.Get(), "dataCenter", dc)
+	logger = logger.WithFields(logrus.Fields{"svc": "id", "dataCenter": dc})
 	service := &service{
 		Generator:     new(sync.Map),
 		Store:         store,
@@ -67,7 +66,7 @@ func New(logger klog.Logger, store store.Store, size int64, dc uint8, min, max t
 		maxBufferTime: max,
 		log:           logger,
 	}
-	logger.Log("new id service")
+	logger.Info("new id service")
 	go service.process()
 	return service
 }
@@ -80,9 +79,10 @@ func (p *service) expand(ctx context.Context, g generator.Generator) (int64, err
 		return 0, err
 	}
 	if err = g.Expand(min, size); err != nil {
-		p.log.Log("action", "expand", "err", err.Error())
+		p.log.WithField("action", "expand").WithError(err).Error()
+		return min, nil
 	}
-	return min, nil
+	return 0, err
 }
 
 // Last 获取上次分配的ID
@@ -130,7 +130,7 @@ func (p *service) Next(ctx context.Context, db, table string) (v int64, msg stri
 		if loaded {
 			g = old.(generator.Generator)
 		} else {
-			p.log.Log("db", db, "table", table, "expand", "init")
+			p.log.WithFields(logrus.Fields{"db": db, "table": table, "expand": "init"})
 			p.expand(ctx, g)
 		}
 	}
@@ -143,16 +143,16 @@ func (p *service) Next(ctx context.Context, db, table string) (v int64, msg stri
 		case generator.ErrEmpty:
 			// 可用数据为空的时候再检查一次，防止并发导致多次expand
 			if g.NeedExpand() {
-				p.log.Log("name", name, "expand", "front", "cause", "empty")
+				p.log.WithFields(logrus.Fields{"name": name, "expand": "front", "cause": "empty"})
 				p.expand(ctx, g)
 			}
 			continue
 		default:
-			p.log.Log("name", name, "expand", "front", "cause", err.Error(), "len", g.Len())
+			p.log.WithFields(logrus.Fields{"name": name, "expand": "front", "cause": err.Error(), "len": g.Len()})
 			return v, err.Error()
 		}
 	}
-	p.log.Log("name", name, "expand", "front", "cause", err.Error())
+	p.log.WithFields(logrus.Fields{"name": name, "expand": "front", "cause": err.Error()})
 	return v, err.Error()
 }
 
@@ -180,13 +180,13 @@ func (p *service) Max(ctx context.Context, db, table string) (int64, string) {
 
 // process 后台任务，加载更多数据
 func (p *service) process() {
-	p.log.Log("msg", "process start")
+	l := p.log.WithField("msg", "process start")
 	for {
 		time.Sleep(processTaskTicker)
 		ctx, cancel := context.WithTimeout(context.Background(), defaultGeneratorLoadTimeout)
 		err := p.Store.Ping(ctx)
 		if err != nil {
-			p.log.Log("expand", "ping", "err", err.Error())
+			l.WithField("expend", "ping").WithError(err).Error()
 		}
 		cancel()
 		p.Generator.Range(func(key, value interface{}) bool {
@@ -199,11 +199,11 @@ func (p *service) process() {
 				return true
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), defaultGeneratorLoadTimeout)
-			p.log.Log("db", g.DB(), "table", g.Table(), "expand", "process", "len", g.Len(), "size", g.Step(), "last", g.Last())
+			p.log.WithFields(logrus.Fields{"db": g.DB(), "table": g.Table(), "expand": "process", "len": g.Len(), "size": g.Step(), "last": g.Last()})
 			_, err := p.expand(ctx, g)
 			cancel()
 			if err != nil {
-				p.log.Log("expand", "expand", "err", err.Error())
+				p.log.WithField("expand", "expand").WithError(err)
 			}
 			return true
 		})

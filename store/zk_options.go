@@ -4,12 +4,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/go-kit/kit/log"
 	"github.com/samuel/go-zookeeper/zk"
+	"github.com/sirupsen/logrus"
 )
 
 type zkConfig struct {
-	logger          log.Logger
+	logger          *logrus.Entry
 	acl             []zk.ACL
 	credentials     []byte
 	connectTimeout  time.Duration

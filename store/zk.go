@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	kitlog "github.com/go-kit/kit/log"
 	"github.com/samuel/go-zookeeper/zk"
+	"github.com/sirupsen/logrus"
 )
 
 // DefaultACL is the default ACL to use for creating znodes.
@@ -41,20 +41,25 @@ type ZK struct {
 	active  bool
 	quit    chan struct{}
 	blackDB map[string]time.Time
+	log     *logrus.Entry
 }
 
 // NewZK 获取redis实例
-func NewZK(clientURI string, logger kitlog.Logger, options ...Option) ZK {
+func NewZK(clientURI string, logger *logrus.Entry, options ...Option) ZK {
 	servers := strings.Split(clientURI, ",")
 	defaultEventHandler := func(event zk.Event) {
-		logger.Log("eventtype", event.Type.String(), "server", event.Server, "state", event.State.String(), "err", event.Err)
+		logrus.WithFields(logrus.Fields{
+			"eventtype": event.Type.String(),
+			"server":    event.Server,
+			"state":     event.State.String(),
+		}).WithError(event.Err)
 	}
 	config := zkConfig{
 		acl:            DefaultACL,
 		connectTimeout: DefaultConnectTimeout,
 		sessionTimeout: DefaultSessionTimeout,
 		eventHandler:   defaultEventHandler,
-		logger:         kitlog.With(logger, "store", "zk"),
+		logger:         logger,
 	}
 	for _, option := range options {
 		if err := option(&config); err != nil {
@@ -68,11 +73,11 @@ func NewZK(clientURI string, logger kitlog.Logger, options ...Option) ZK {
 	dialer := func(network, address string, _ time.Duration) (net.Conn, error) {
 		return net.DialTimeout(network, address, config.connectTimeout)
 	}
-	conn, _, err := zk.Connect(servers, config.sessionTimeout, withLogger(kitlog.With(logger, "store", "zk")), zk.WithDialer(dialer))
+	conn, _, err := zk.Connect(servers, config.sessionTimeout, withLogger(logger), zk.WithDialer(dialer))
 	if err != nil {
 		log.Fatal("zk connect error", clientURI)
 	}
-	return ZK{conn: conn, config: config, active: true, quit: make(chan struct{}), blackDB: make(map[string]time.Time)}
+	return ZK{conn: conn, config: config, active: true, quit: make(chan struct{}), blackDB: make(map[string]time.Time), log: logger}
 }
 
 // Range 分片分配进度, 返回v 表示可用范围[v, v+size)
@@ -85,8 +90,11 @@ func (p ZK) Range(_ context.Context, dataCenter uint8, db, table string, size in
 		fmt.Println("black", last, "sice", time.Since(last))
 	}
 	biz := fmt.Sprintf(zkTPL, zkRoot, dataCenter, db, table)
-
-	l := kitlog.With(p.config.logger, "action", "range", "biz", biz, "size", size)
+	l := p.log.WithFields(logrus.Fields{
+		"action": "Get",
+		"biz":    biz,
+		"size":   size,
+	})
 
 	var min int64
 	var next string
@@ -96,17 +104,22 @@ func (p ZK) Range(_ context.Context, dataCenter uint8, db, table string, size in
 	// 存在多进程竞争的问题，这里乐观认为会成功
 	for i := 0; i < retryTimes; i++ {
 		if i > 0 {
-			l.Log("action", "Save", "next", next, "min", min, "err", err.Error(), "retry", i)
+			l.WithFields(logrus.Fields{
+				"next":   next,
+				"action": "save",
+				"min":    min,
+				"retry":  i,
+			})
 		}
 		data, stat, err = p.conn.Get(biz)
 		switch err {
 		default:
 			// err !=nil && err != zk.ErrNoNode
-			l.Log("action", "Get", "err", err.Error())
+			l.WithError(err).Error("can't catch")
 			continue
 		case nil:
 			if min, err = strconv.ParseInt(string(data), 10, 64); err != nil {
-				l.Log("action", "Get", "msg", "parse error", "err", err.Error(), "data", string(data))
+				l.WithField("data", string(data)).WithError(err).Error("parse error")
 				return 0, err
 			}
 			next = strconv.FormatInt(min+size, 10)
@@ -117,7 +130,7 @@ func (p ZK) Range(_ context.Context, dataCenter uint8, db, table string, size in
 		}
 		switch err {
 		default:
-			l.Log("action", "Save", "next", next, "min", min, "err", err.Error())
+			l.WithField("action", "save").WithError(err).Error()
 			return 0, ErrZKFail
 		case zk.ErrNodeExists, zk.ErrBadVersion:
 			continue

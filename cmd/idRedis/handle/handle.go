@@ -3,14 +3,11 @@ package handle
 import (
 	"sync"
 
-	"strings"
-
 	"context"
-	"os"
+	"strings"
 	"time"
 
-	klog "github.com/go-kit/kit/log"
-
+	"github.com/sirupsen/logrus"
 	"github.com/tidwall/redcon"
 
 	"github.com/luw2007/rabbitid/cmd/idHttp/conf"
@@ -21,7 +18,7 @@ import (
 type Handler struct {
 	svc    service.Service
 	db     store.Store
-	logger klog.Logger
+	logger *logrus.Entry
 }
 
 const (
@@ -37,7 +34,11 @@ var (
 func (p *Handler) Serve(conn redcon.Conn, cmd redcon.Command) {
 	defer func(begin time.Time) {
 		if time.Since(begin) > slowTime {
-			p.logger.Log("slow", time.Since(begin), "duration", time.Since(begin))
+			p.logger.WithFields(
+				logrus.Fields{
+					"slow":     time.Since(begin),
+					"duration": time.Since(begin),
+				})
 		}
 	}(time.Now())
 	switch strings.ToLower(string(cmd.Args[0])) {
@@ -180,10 +181,7 @@ func (p *Handler) ShutDown() {
 }
 
 func NewRedisHandler(config conf.Config) *Handler {
-	var logger klog.Logger
-	logger = klog.NewLogfmtLogger(klog.NewSyncWriter(os.Stderr))
-	logger = klog.With(logger, "ts", klog.DefaultTimestampUTC)
-
+	logger := config.Logger.WithField("app", "redis")
 	db := store.NewStore(config.Store.Type, config.Store.URI, config.Generate.DataCenter, logger)
 	svc := service.New(logger, db, config.Generate.Step, config.Generate.DataCenter, config.Store.Min, config.Store.Max)
 	return &Handler{svc: svc, db: db, logger: logger}

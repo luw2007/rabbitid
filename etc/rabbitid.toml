@@ -1,6 +1,10 @@
 [server]
 addr = ":7000"
 
+[log]
+path = "./logs"
+level = "debug"
+
 [store]
 type = "redis"
 uri = "127.0.0.1:6379"

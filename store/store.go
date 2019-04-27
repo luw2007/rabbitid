@@ -5,9 +5,8 @@ import (
 	"context"
 	"log"
 
-	"errors"
-
-	kitlog "github.com/go-kit/kit/log"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // A Store 存储接口
@@ -26,17 +25,17 @@ var (
 	ErrDBNotExists = errors.New("zk: db does not exist")
 )
 
-func NewStore(storeType, uri string, dataCenter uint8, logger kitlog.Logger) Store {
+func NewStore(storeType, uri string, dataCenter uint8, logger *logrus.Entry) Store {
 	var db Store
 	switch storeType {
 	default:
 		log.Fatalln("store type Error", storeType)
 	case "redis":
-		db = NewRedis(uri, logger)
+		db = NewRedis(uri, logger.WithField("store", storeType))
 	case "etcd":
-		db = NewEtcd(uri, logger)
+		db = NewEtcd(uri, logger.WithField("store", storeType))
 	case "zk":
-		db = NewZK(uri, logger)
+		db = NewZK(uri, logger.WithField("store", storeType))
 	}
 	db.Init(dataCenter)
 	return db

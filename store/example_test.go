@@ -2,15 +2,13 @@ package store
 
 import (
 	"context"
-	"log"
-	"os"
 
-	kitlog "github.com/go-kit/kit/log"
+	"github.com/sirupsen/logrus"
 )
 
 func ExampleNewEtcd() {
-	logger := kitlog.NewJSONLogger(kitlog.NewSyncWriter(os.Stderr))
-	db := NewEtcd(testURI, logger)
+	log := logrus.NewEntry(logrus.New())
+	db := NewEtcd(testURI, log)
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	err := db.Ping(ctx)
@@ -21,8 +19,8 @@ func ExampleNewEtcd() {
 }
 
 func ExampleNewRedis() {
-	logger := kitlog.NewJSONLogger(kitlog.NewSyncWriter(os.Stderr))
-	db := NewRedis(testRedis, logger)
+	log := logrus.NewEntry(logrus.New())
+	db := NewRedis(testRedis, log)
 	err := db.Ping(context.TODO())
 	if err != nil {
 		log.Fatal(err)
