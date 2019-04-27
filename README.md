@@ -45,6 +45,17 @@ create /rabbitid 'rabbit id root'
 cd tools/zoo && docker-compose up -d
 ```
 
+idHttp
+---
+- /next
+    获取下一个id `curl 'http://127.0.0.1:7000/next' -d '{"app":"ugc","db":"topic"}'`
+- /last
+    最后一个id `curl 'http://127.0.0.1:7000/last' -d '{"app":"ugc","db":"topic"}'`
+- /max
+    最大的id `curl 'http://127.0.0.1:7000/max' -d '{"app":"ugc","db":"topic"}'`
+- /remainder
+    剩余数量 `curl 'http://127.0.0.1:7000/remainder' -d '{"app":"ugc","db":"topic"}'`
+
 文档
 ---
 - [需要调研](doc/research.md)
