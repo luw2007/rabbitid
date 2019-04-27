@@ -9,7 +9,7 @@ import (
 	"github.com/go-redis/redis"
 )
 
-const redisPrefix = "rabbitid_%d_%s"
+const redisPrefix = "rabbitid_%d_%s_%s"
 
 // A Redis 使用redis作存储
 type Redis struct {
@@ -31,7 +31,7 @@ func NewRedis(redisAddr string, logger kitlog.Logger) Redis {
 
 // Range 分片分配进度, 返回v 表示可用范围[v, v+size)
 func (p Redis) Range(_ context.Context, dataCenter uint8, db, table string, size int64) (int64, error) {
-	biz := fmt.Sprintf(redisPrefix, dataCenter, db)
+	biz := fmt.Sprintf(redisPrefix, dataCenter, db, table)
 	value := p.conn.HIncrBy(biz, table, size)
 	max := value.Val()
 	p.log.Log("action", "range", "biz", biz, "size", size, "last", max-size)

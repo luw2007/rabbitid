@@ -6,7 +6,7 @@ ENV GOPATH /go
 ENV PATH $PATH:$GOROOT/bin
 ENV GO111MODULE on
 
-RUN mkdir -p /rabbitid /rabbitid/etc /rabbitid/logs && apk add git
+RUN mkdir -p /rabbitid /rabbitid/etc /rabbitid/logs
 WORKDIR /rabbitid
 
 ADD . /go/src/github.com/luw2007/rabbitid

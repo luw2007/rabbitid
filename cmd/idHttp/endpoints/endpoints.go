@@ -9,69 +9,45 @@ import (
 	"github.com/luw2007/rabbitid/cmd/idHttp/service"
 )
 
-type NextRequest struct {
-	APP string
-	DB  string
+type Request struct {
+	APP string `json:"app"`
+	DB  string `json:"db"`
 }
 
-type NextResponse struct {
+type Response struct {
 	Id  int64  `json:"id,omitempty"`
 	Msg string `json:"msg,omitempty"`
 }
 
 func MakeNextEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(NextRequest)
+		req := request.(Request)
 		id, msg := s.Next(ctx, req.APP, req.DB)
-		return NextResponse{Id: id, Msg: msg}, nil
+		return Response{Id: id, Msg: msg}, nil
 	}
-}
-
-type LastRequest struct {
-	Name string
-}
-type LastResponse struct {
-	Id  int64  `json:"id,omitempty"`
-	Msg string `json:"msg,omitempty"`
 }
 
 func MakeLastEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(LastRequest)
-		id, msg := s.Last(ctx, req.Name)
-		return LastResponse{Id: id, Msg: msg}, nil
+		req := request.(Request)
+		id, msg := s.Last(ctx, req.APP, req.DB)
+		return Response{Id: id, Msg: msg}, nil
 	}
-}
-
-type RemainderRequest struct {
-	Name string
-}
-type RemainderResponse struct {
-	Id  int64  `json:"id,omitempty"`
-	Msg string `json:"msg,omitempty"`
 }
 
 func MakeRemainderEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(RemainderRequest)
-		id, msg := s.Remainder(ctx, req.Name)
-		return RemainderResponse{Id: id, Msg: msg}, nil
+		req := request.(Request)
+		id, msg := s.Remainder(ctx, req.APP, req.DB)
+		return Response{Id: id, Msg: msg}, nil
 	}
-}
-
-type MaxRequest struct {
-	Name string
-}
-type MaxResponse struct {
-	Id  int64  `json:"id,omitempty"`
-	Msg string `json:"msg,omitempty"`
 }
 
 func MakeMaxEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(MaxRequest)
-		id, msg := s.Max(ctx, req.Name)
-		return MaxResponse{Id: id, Msg: msg}, nil
+		req := request.(Request)
+		id, msg := s.Max(ctx, req.APP, req.DB)
+		return Response{Id: id, Msg: msg}, nil
 	}
 }
 

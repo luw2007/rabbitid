@@ -110,8 +110,9 @@ func (p *Handler) Remainder(conn redcon.Conn, cmd redcon.Command) {
 		conn.WriteError("ERR wrong number of arguments for '" + string(cmd.Args[0]) + "' command")
 		return
 	}
-	name := string(cmd.Args[1])
-	id, msg := p.svc.Remainder(context.TODO(), name)
+	db := string(cmd.Args[1])
+	table := string(cmd.Args[2])
+	id, msg := p.svc.Remainder(context.TODO(), db, table)
 	if msg != "" {
 		conn.WriteError(msg)
 		return
@@ -124,8 +125,9 @@ func (p *Handler) Last(conn redcon.Conn, cmd redcon.Command) {
 		conn.WriteError("ERR wrong number of arguments for '" + string(cmd.Args[0]) + "' command")
 		return
 	}
-	name := string(cmd.Args[1])
-	id, msg := p.svc.Last(context.TODO(), name)
+	db := string(cmd.Args[1])
+	table := string(cmd.Args[2])
+	id, msg := p.svc.Last(context.TODO(), db, table)
 	if msg != "" {
 		conn.WriteError(msg)
 		return
@@ -138,8 +140,9 @@ func (p *Handler) Max(conn redcon.Conn, cmd redcon.Command) {
 		conn.WriteError("ERR wrong number of arguments for '" + string(cmd.Args[0]) + "' command")
 		return
 	}
-	name := string(cmd.Args[1])
-	id, msg := p.svc.Max(context.TODO(), name)
+	db := string(cmd.Args[1])
+	table := string(cmd.Args[2])
+	id, msg := p.svc.Max(context.TODO(), db, table)
 	if msg != "" {
 		conn.WriteError(msg)
 		return

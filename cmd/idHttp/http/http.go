@@ -19,7 +19,7 @@ func NewHTTPHandler(endpoints endpoints.Endpoints) http.Handler {
 	return m
 }
 func DecodeNextRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req endpoints.NextRequest
+	var req endpoints.Request
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
@@ -28,7 +28,7 @@ func EncodeNextResponse(_ context.Context, w http.ResponseWriter, response inter
 	return json.NewEncoder(w).Encode(response)
 }
 func DecodeLastRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req endpoints.LastRequest
+	var req endpoints.Request
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
@@ -37,7 +37,7 @@ func EncodeLastResponse(_ context.Context, w http.ResponseWriter, response inter
 	return json.NewEncoder(w).Encode(response)
 }
 func DecodeRemainderRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req endpoints.RemainderRequest
+	var req endpoints.Request
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
@@ -46,7 +46,7 @@ func EncodeRemainderResponse(_ context.Context, w http.ResponseWriter, response 
 	return json.NewEncoder(w).Encode(response)
 }
 func DecodeMaxRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req endpoints.MaxRequest
+	var req endpoints.Request
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }

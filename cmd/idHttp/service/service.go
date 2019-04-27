@@ -21,11 +21,11 @@ type Service interface {
 	// NextID 通过服务名称获取自增ID和错误
 	Next(ctx context.Context, db, table string) (id int64, msg string)
 	// Last 通过服务名获取最后发放的ID和错误
-	Last(ctx context.Context, name string) (id int64, msg string)
+	Last(ctx context.Context, db, table string) (id int64, msg string)
 	// Last 通过服务名获取剩余的ID数量和错误
-	Remainder(ctx context.Context, name string) (id int64, msg string)
+	Remainder(ctx context.Context, db, table string) (id int64, msg string)
 	// Max 通过服务名获取可生成的最大ID和错误
-	Max(ctx context.Context, name string) (id int64, msg string)
+	Max(ctx context.Context, db, table string) (id int64, msg string)
 }
 
 // A service 递增生成ID
@@ -86,7 +86,8 @@ func (p *service) expand(ctx context.Context, g generator.Generator) (int64, err
 }
 
 // Last 获取上次分配的ID
-func (p *service) Last(ctx context.Context, name string) (int64, string) {
+func (p *service) Last(ctx context.Context, db, table string) (int64, string) {
+	name := fmt.Sprintf("%s|%s", db, table)
 	gs, ok := p.Generator.Load(name)
 	if !ok {
 		return 0, ErrEmpty.Error()
@@ -156,7 +157,8 @@ func (p *service) Next(ctx context.Context, db, table string) (v int64, msg stri
 }
 
 // Remainder 余数
-func (p *service) Remainder(ctx context.Context, name string) (int64, string) {
+func (p *service) Remainder(ctx context.Context, db, table string) (int64, string) {
+	name := fmt.Sprintf("%s|%s", db, table)
 	gs, ok := p.Generator.Load(name)
 	if !ok {
 		return 0, ErrEmpty.Error()
@@ -166,7 +168,8 @@ func (p *service) Remainder(ctx context.Context, name string) (int64, string) {
 }
 
 // Max 可生成的最大值
-func (p *service) Max(ctx context.Context, name string) (int64, string) {
+func (p *service) Max(ctx context.Context, db, table string) (int64, string) {
+	name := fmt.Sprintf("%s|%s", db, table)
 	gs, ok := p.Generator.Load(name)
 	if !ok {
 		return 0, ErrEmpty.Error()
