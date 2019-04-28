@@ -9,5 +9,7 @@ zookeeper:
 etcd:
   # image: quay.io/coreos/etcd
   image: quay-mirror.qiniu.com/coreos/etcd
+  command: etcd --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://0.0.0.0:2379
   ports:
     - 2379:2379
+    - 2380:2380
