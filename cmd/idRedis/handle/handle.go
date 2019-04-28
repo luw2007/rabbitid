@@ -54,6 +54,8 @@ func (p *Handler) Serve(conn redcon.Conn, cmd redcon.Command) {
 		p.Last(conn, cmd)
 	case "len":
 		p.Remainder(conn, cmd)
+	case "check":
+		p.Check(conn, cmd)
 	case "ping":
 		p.Ping(conn, cmd)
 	case "quit":
@@ -152,11 +154,15 @@ func (p *Handler) Max(conn redcon.Conn, cmd redcon.Command) {
 }
 
 func (p *Handler) Ping(conn redcon.Conn, cmd redcon.Command) {
+	conn.WriteString("PONG")
+}
+
+func (p *Handler) Check(conn redcon.Conn, cmd redcon.Command) {
 	err := p.db.Ping(context.TODO())
 	if err != nil {
 		conn.WriteError(err.Error())
 	}
-	conn.WriteString("PONG")
+	conn.WriteString("OK")
 }
 
 func (p *Handler) Connected(conn redcon.Conn) bool {

@@ -1,3 +1,3 @@
 wrk.method = "POST"
-wrk.body   = "{\"name\":\"a\"}"
+wrk.body   = "app=ugc&db=topic"
 wrk.headers["Content-Type"] = "application/x-www-form-urlencoded"

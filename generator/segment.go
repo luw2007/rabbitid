@@ -69,7 +69,7 @@ func NewSegment(dataCenter uint8, db, table string, step int64) *Segment {
 	dc := (int64(dataCenter) & DataCenterMask) << sequenceBits
 	ring := make([]*Buffer, defaultRingSize)
 	for i := range ring {
-		ring[i] = &Buffer{disabled: true}
+		ring[i] = &Buffer{disabled: 1}
 	}
 	return &Segment{
 		dc:         dc,
@@ -86,7 +86,7 @@ func NewSegment(dataCenter uint8, db, table string, step int64) *Segment {
 // 发号范围 (min, max]
 func (p *Segment) Expand(min, step int64) error {
 	// 判断游标位置超出范围, 写满的发生的概率远小于饥饿
-	if p.writeCursor+1 >= p.readCursor+defaultRingSize {
+	if atomic.LoadInt32(&p.writeCursor)+1 >= atomic.LoadInt32(&p.readCursor)+defaultRingSize {
 		return ErrFull
 	}
 	// 使用atomic 操作游标
@@ -115,8 +115,10 @@ func (p Segment) ExpandSize() int32 {
 }
 
 // Last 获取最后一次发号数据
-func (p Segment) Last() int64 {
-	return p.last
+func (p Segment) Last() (last int64) {
+	cur := atomic.LoadInt32(&p.readCursor)
+	b := p.ring[cur%defaultRingSize]
+	return b.Last()
 }
 
 // Len 获取缓存剩余的号码量，由于没有锁，此值不精确
@@ -164,7 +166,7 @@ func (p Segment) NeedExpand() bool {
 // isDisabled 表示当前缓存已发完处于不可用状态，需要移动读游标 readCursor
 func (p *Segment) Next() (id int64, err error) {
 	// 不存在初始化
-	cur := p.readCursor
+	cur := atomic.LoadInt32(&p.readCursor)
 	b := p.ring[cur%defaultRingSize]
 	id, isDisabled, err := b.Next()
 	if err != nil {
@@ -174,12 +176,10 @@ func (p *Segment) Next() (id int64, err error) {
 		// Buffer.Next内部保证只有一个goroutine才能获取到b.max，
 		// 所以isDisabled=true只有一个，这里增加读游标不会出现并发问题
 		atomic.AddInt32(&p.readCursor, 1)
+		return 0, ErrEmpty
 	}
 	// 合并机房标记位
-	id = p.dc | id&sequenceMask
-	// last 不需要精确数据
-	p.last = id
-	return id, nil
+	return p.dc | id&sequenceMask, nil
 }
 
 // Step 获取当前大小

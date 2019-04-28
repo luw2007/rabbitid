@@ -20,7 +20,7 @@ docker-compose up -d
 # 运行http协议客户端
 go run cmd/idHttp/main.go
 # 查询id
-curl 'http://127.0.0.1:7000/next' -d '{"app":"ugc","db":"topic"}'
+curl 'http://127.0.0.1:7000/next' -d 'app=ugc&db=topic'
 # 得到 {"id":1}
 ```
 
@@ -60,13 +60,13 @@ cd tools/zoo && docker-compose up -d
 idHttp
 ---
 - /next
-    获取下一个id `curl 'http://127.0.0.1:7000/next' -d '{"app":"ugc","db":"topic"}'`
+    获取下一个id `curl 'http://127.0.0.1:7000/next' -d 'app=ugc&db=topic'`
 - /last
-    最后一个id `curl 'http://127.0.0.1:7000/last' -d '{"app":"ugc","db":"topic"}'`
+    最后一个id `curl 'http://127.0.0.1:7000/last?app=ugc&db=topic'`
 - /max
-    最大的id `curl 'http://127.0.0.1:7000/max' -d '{"app":"ugc","db":"topic"}'`
+    最大的id `curl 'http://127.0.0.1:7000/max?app=ugc&db=topic'`
 - /remainder
-    剩余数量 `curl 'http://127.0.0.1:7000/remainder' -d '{"app":"ugc","db":"topic"}'`
+    剩余数量 `curl 'http://127.0.0.1:7000/remainder?app=ugc&db=topic'`
 
 文档
 ---

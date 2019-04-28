@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -34,44 +33,45 @@ func main() {
 	db := store.NewStore(config.Store.Type, config.Store.URI, config.Generate.DataCenter, logger)
 	svc := service.New(logger, db, config.Generate.Step, config.Generate.DataCenter, config.Store.Min, config.Store.Max)
 
+	g.GET("/last", func(c *gin.Context) {
+		app := c.Query("app")
+		db := c.Query("db")
+		if app == "" || db == "" {
+			c.JSON(200, `{"code":-1,"id":0,"msg":"argument error"}`)
+			return
+		}
+		id, msg := svc.Last(c, app, db)
+		c.JSON(200, Response{ID: id, Msg: msg})
+	})
+	g.GET("/max", func(c *gin.Context) {
+		app := c.Query("app")
+		db := c.Query("db")
+		if app == "" || db == "" {
+			c.JSON(200, `{"code":-1,"id":0,"msg":"argument error"}`)
+			return
+		}
+		id, msg := svc.Max(c, app, db)
+		c.JSON(200, Response{ID: id, Msg: msg})
+	})
+	g.GET("/remainder", func(c *gin.Context) {
+		app := c.Query("app")
+		db := c.Query("db")
+		if app == "" || db == "" {
+			c.JSON(200, `{"code":-1,"id":0,"msg":"argument error"}`)
+			return
+		}
+		id, msg := svc.Remainder(c, app, db)
+		//c.String(200, fmt.Sprintf("{"))
+		c.JSON(200, Response{ID: id, Msg: msg})
+	})
 	g.POST("/next", func(c *gin.Context) {
-		var req Request
-		err := c.BindJSON(&req)
-		if err != nil {
+		app := c.PostForm("app")
+		db := c.PostForm("db")
+		if app == "" || db == "" {
 			c.JSON(200, Response{Code: -1, Msg: "argument error"})
 			return
 		}
-		id, msg := svc.Next(context.Background(), req.APP, req.DB)
-		c.JSON(200, Response{ID: id, Msg: msg})
-	})
-	g.POST("/last", func(c *gin.Context) {
-		var req Request
-		err := c.BindJSON(&req)
-		if err != nil {
-			c.JSON(200, Response{Code: -1, Msg: "argument error"})
-			return
-		}
-		id, msg := svc.Last(context.Background(), req.APP, req.DB)
-		c.JSON(200, Response{ID: id, Msg: msg})
-	})
-	g.POST("/max", func(c *gin.Context) {
-		var req Request
-		err := c.BindJSON(&req)
-		if err != nil {
-			c.JSON(200, Response{Code: -1, Msg: "argument error"})
-			return
-		}
-		id, msg := svc.Max(context.Background(), req.APP, req.DB)
-		c.JSON(200, Response{ID: id, Msg: msg})
-	})
-	g.POST("/remainder", func(c *gin.Context) {
-		var req Request
-		err := c.BindJSON(&req)
-		if err != nil {
-			c.JSON(200, Response{Code: -1, Msg: "argument error"})
-			return
-		}
-		id, msg := svc.Remainder(context.Background(), req.APP, req.DB)
+		id, msg := svc.Next(c, app, db)
 		c.JSON(200, Response{ID: id, Msg: msg})
 	})
 

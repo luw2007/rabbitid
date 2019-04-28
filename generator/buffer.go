@@ -8,8 +8,7 @@ import (
 // A Buffer 存储分配ID (offset, max]
 // 通过设置disabled为true，表示当前Buffer已经发完
 type Buffer struct {
-	disabled          bool
-	max, offset, step int64
+	disabled, max, offset, step int64
 }
 
 // setBuffer 设置buffer，传入最小值min和大小size，返回Buffer对象
@@ -18,15 +17,17 @@ func setBuffer(min, step int64, buff *Buffer) {
 	buff.max = min + step
 	buff.offset = min
 	buff.step = step
-	buff.disabled = false
+	atomic.StoreInt64(&buff.disabled, 0)
 }
 
 // IsDisabled 是否不可用
 func (b *Buffer) IsDisabled() bool {
-	if b == nil {
-		return true
-	}
-	return b.disabled
+	return atomic.LoadInt64(&(b.disabled)) == 1
+}
+
+// SetDisabled 设置Buffer不可用
+func (b *Buffer) SetDisabled() {
+	atomic.StoreInt64(&(b.disabled), 1)
 }
 
 // Next 获取下一个数字, 返回id 号码，isDisabled 是否可用，err 错误，
@@ -52,6 +53,14 @@ func (b *Buffer) Next() (id int64, isDisabled bool, err error) {
 	return id, id >= b.max, nil
 }
 
+// Last 最后一个值，并发下不精确
+func (b *Buffer) Last() int64 {
+	if b.IsDisabled() {
+		return 0
+	}
+	return atomic.LoadInt64(&b.offset)
+}
+
 // Remainder 剩余数量
 func (b *Buffer) Remainder() int64 {
 	remainder := b.max - atomic.LoadInt64(&b.offset)
@@ -61,12 +70,7 @@ func (b *Buffer) Remainder() int64 {
 	return 0
 }
 
-// SetDisabled 设置Buffer不可用
-func (b *Buffer) SetDisabled() {
-	b.disabled = true
-}
-
 // String 打印出内部对象
 func (b Buffer) String() string {
-	return fmt.Sprintf("{max:%d, step:%d, offset:%d, disabled:%t}", b.max, b.step, b.offset, b.disabled)
+	return fmt.Sprintf("{max:%d, step:%d, offset:%d, disabled:%t}", b.max, b.step, b.offset, b.IsDisabled())
 }

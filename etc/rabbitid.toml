@@ -2,7 +2,7 @@
 addr = ":7000"
 
 [log]
-path = "./logs"
+path = "/tmp/rabbitid/"
 level = "debug"
 
 [store]
