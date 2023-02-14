@@ -8,7 +8,7 @@ require (
 	github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3 // indirect
 	github.com/gin-gonic/gin v1.3.0
 	github.com/go-redis/redis v6.15.2+incompatible
-	github.com/gogo/protobuf v1.2.1 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f
@@ -23,7 +23,6 @@ require (
 	github.com/stretchr/testify v1.2.2
 	github.com/tidwall/redcon v1.0.0
 	github.com/ugorji/go v1.1.4 // indirect
-	golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6 // indirect
 	google.golang.org/grpc v1.20.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
