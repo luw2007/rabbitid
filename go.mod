@@ -23,7 +23,7 @@ require (
 	github.com/stretchr/testify v1.2.2
 	github.com/tidwall/redcon v1.0.0
 	github.com/ugorji/go v1.1.4 // indirect
-	golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	google.golang.org/grpc v1.20.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
